@@ -39,8 +39,8 @@ import org.jsoup.select.Elements;
 public class CrowlInternetArchive {
 
     private static final String sourceFile = "data/source.txt";
-    private static final String resultFile = "data/result.txt";
-    private static final String htmlFile = "data/index.html";
+    private static final String resultFile = "data/result1.txt";
+    private static final String htmlFile = "data/";
 
     private static final String queryURL = "https://web.archive.org/web/*/";
 
@@ -83,7 +83,7 @@ public class CrowlInternetArchive {
         try {
             Path dest = Paths.get(resultFile);
             Files.write(dest, list, Charset.defaultCharset());
-        } catch (Exception  e) {
+        } catch (Exception e) {
             LOG.severe(e.toString());
         }
     }
@@ -96,21 +96,22 @@ public class CrowlInternetArchive {
 //            System.setProperty("http.proxyPort", "80");
             System.out.println(queryString);
 
-            String command = "./downloadArchive.sh " + queryString;
+            String command = "./downloadArchive.sh " + queryString + " " + baseURL.replaceAll("/", ".") + ".html";
             ProcessBroker pb = new ProcessBroker(command.split(" "));
             pb.execute();
 //            Document document = Jsoup.connect(queryString)
 //                    .timeout(2000000000)
 //                    .userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.52 Safari/537.36")
 //                    .get();
-            Document document = Jsoup.parse(new File(htmlFile), "UTF-8");
+            Document document = Jsoup.parse(new File(htmlFile + baseURL.replaceAll("/", ".") + ".html"), "UTF-8");
 
             Elements elements = document.select(".url a");
 
             elements.parallelStream()
-//                    .filter(s -> s.text().endsWith("rdf"))
-//                    .filter(s -> s.text().endsWith("rdf") || s.text().endsWith("n3"))
-//                    .filter(s -> s.text().contains("rdf"))
+                    //                    .filter(s -> s.text().endsWith("rdf"))
+                    .filter(s -> s.text().endsWith("rdf") || s.text().endsWith("nt") || s.text().endsWith("n3"))
+                    //                    .filter(s -> s.text().contains("foaf"))
+                    .limit(20000)
                     .forEach((Element e) -> {
                         System.out.println("checking -> " + e.text());
                         result.put(getStatusCode(e.text()), e.text());

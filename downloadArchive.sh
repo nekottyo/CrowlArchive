@@ -1,2 +1,2 @@
 #!/bin/sh
-curl $1 > ./data/index.html
+curl $1 > ./data/$2
