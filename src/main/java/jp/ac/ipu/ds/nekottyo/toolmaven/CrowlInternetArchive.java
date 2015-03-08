@@ -72,9 +72,14 @@ public class CrowlInternetArchive {
                                 logInfo.append(key).append(":").append(resultmap.get(key).size()).append(" ");
                             });
                     String except404 = String.valueOf(1 - ((double) resultmap.get(200).size() / resultmap.values().size()));
+                    System.out.println(resultmap.get(404));
+                    Path dist = Paths.get("./data/404list.txt");
+                    Files.write(dist, resultmap.get(404), Charset.defaultCharset());
                     list.add(l + "," + except404);
                     LOG.info(logInfo.append("\n\t").append(except404).toString());
                 } catch (InterruptedException ex) {
+                    Logger.getLogger(CrowlInternetArchive.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
                     Logger.getLogger(CrowlInternetArchive.class.getName()).log(Level.SEVERE, null, ex);
                 }
             });
@@ -94,31 +99,39 @@ public class CrowlInternetArchive {
             String queryString = queryURL + baseURL + "*";
 //            System.setProperty("http.proxyHost", "27.96.46.110");
 //            System.setProperty("http.proxyPort", "80");
-            System.out.println(queryString);
+//            System.out.println(queryString);
 
-            String command = "./downloadArchive.sh " + queryString + " " + baseURL.replaceAll("/", ".") + ".html";
-            ProcessBroker pb = new ProcessBroker(command.split(" "));
-            pb.execute();
+//            String command = "";
+//            String osName = System.getProperty("os.name").toLowerCase();
+//            if (osName.contains("windows")) {
+//                command = "./downloadArchive.bat " + queryString + " " + baseURL.replaceAll("/", ".") + ".html";
+//            } else if (osName.contains("mac")) {
+//                command = "./downloadArchive.sh " + queryString + " " + baseURL.replaceAll("/", ".") + ".html";
+//            }
+//            ProcessBroker pb = new ProcessBroker(command.split(" "));
+//            pb.execute();
 //            Document document = Jsoup.connect(queryString)
 //                    .timeout(2000000000)
 //                    .userAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1500.52 Safari/537.36")
 //                    .get();
-            Document document = Jsoup.parse(new File(htmlFile + baseURL.replaceAll("/", ".") + ".html"), "UTF-8");
+//            Document document = Jsoup.parse(new File(htmlFile + baseURL.replaceAll("/", ".") + ".html"), "UTF-8");
+            Stream<String> htmlStream = Files.lines(Paths.get(htmlFile + baseURL.replaceAll("/", ".") + ".html"), Charset.defaultCharset());
+//            Elements elements = document.select(".url a");
 
-            Elements elements = document.select(".url a");
-
-            elements.parallelStream()
+            htmlStream.parallel()
+                    .filter(s -> s.contains(baseURL))
+                    .map(s -> s.replaceAll("<.+?>", "").trim())
                     //                    .filter(s -> s.text().endsWith("rdf"))
-                    .filter(s -> s.text().endsWith("rdf") || s.text().endsWith("nt") || s.text().endsWith("n3"))
+                    //                    .filter(s -> s.text().endsWith("rdf") || s.text().endsWith("nt") || s.text().endsWith("n3"))
                     //                    .filter(s -> s.text().contains("foaf"))
                     .limit(20000)
-                    .forEach((Element e) -> {
-                        System.out.println("checking -> " + e.text());
-                        result.put(getStatusCode(e.text()), e.text());
+                    .forEach((String e) -> {
+//                        System.out.println("checking -> " + e);
+                        result.put(getStatusCode(e), e);
                     });
 
             result.keySet().stream().forEach(k -> {
-                System.out.println(k + " " + result.get(k));
+//                System.out.println(k + " " + result.get(k));
             });
 
             return result;

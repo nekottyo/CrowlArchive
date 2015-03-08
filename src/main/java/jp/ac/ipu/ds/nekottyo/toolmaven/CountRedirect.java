@@ -24,6 +24,7 @@ public class CountRedirect {
 
     public static void main(String[] args) throws IOException {
         System.out.println(getRedirectedList(filePath).size());
+//        getRedirectedList(filePath).forEach(System.out::println);
     }
 
     public static List getRedirectedList(String filePath) throws IOException {
@@ -37,5 +38,4 @@ public class CountRedirect {
                     .collect(Collectors.toList());
         }
     }
-
 }
